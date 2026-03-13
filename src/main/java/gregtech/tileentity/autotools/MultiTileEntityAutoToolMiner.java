@@ -808,16 +808,16 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	}
 
 	public static IIconContainer sColoreds[] = new IIconContainer[] {
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/colored/front"),
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/colored/back"),
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/colored/side")
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/colored/front"),
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/colored/back"),
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/colored/side")
 	}, sOverlays[] = new IIconContainer[] {
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/overlay/front"),
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/overlay/back"),
-		new Textures.BlockIcons.CustomIcon("machines/autotools/hammer/overlay/side")
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/overlay/front"),
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/overlay/back"),
+		new Textures.BlockIcons.CustomIcon("machines/autotools/miner/overlay/side")
 	};
-	public static IIconContainer sOverlayOutputTop = new Textures.BlockIcons.CustomIcon("machines/automation/hopper/overlay/top");
-	public static IIconContainer sOverlayOutputBottom = new Textures.BlockIcons.CustomIcon("machines/automation/hopper/overlay/bottom");
+	public static IIconContainer sOverlayOutputTop = new Textures.BlockIcons.CustomIcon("machines/autotools/miner/overlay/top");
+	public static IIconContainer sOverlayOutputBottom = new Textures.BlockIcons.CustomIcon("machines/autotools/miner/overlay/bottom");
 
 	public class MultiTileEntityGUICommonAutoToolMiner extends ContainerCommon {
 		public MultiTileEntityGUICommonAutoToolMiner(InventoryPlayer aInventoryPlayer, MultiTileEntityAutoToolMiner aTileEntity, int aGUIID) {
@@ -848,7 +848,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	@SideOnly(Side.CLIENT)
 	public class MultiTileEntityGUIClientAutoToolMiner extends ContainerClient {
 		public MultiTileEntityGUIClientAutoToolMiner(InventoryPlayer aInventoryPlayer, MultiTileEntityAutoToolMiner aTileEntity, int aGUIID) {
-			super(new MultiTileEntityGUICommonAutoToolMiner(aInventoryPlayer, aTileEntity, aGUIID), RES_PATH_GUI + "chests/27.png");
+			super(new MultiTileEntityGUICommonAutoToolMiner(aInventoryPlayer, aTileEntity, aGUIID), RES_PATH_GUI + "machines/Miner.png");
 		}
 
 		@Override
