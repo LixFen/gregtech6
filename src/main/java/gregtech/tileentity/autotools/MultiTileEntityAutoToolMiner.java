@@ -775,6 +775,12 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		super.invalidate();
 	}
 
+	@Override
+	public void onChunkUnload() {
+		loseTarget();
+		super.onChunkUnload();
+	}
+
 	@Override public boolean setStateOnOff(boolean aOnOff) {mStopped = !aOnOff; return !mStopped;}
 	@Override public boolean getStateOnOff() {return !mStopped;}
 
