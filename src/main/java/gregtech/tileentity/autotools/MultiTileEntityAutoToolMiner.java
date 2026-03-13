@@ -214,9 +214,9 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 			if (!acquireNextTarget(tTool, tToolStack)) {
 				scanForCandidates(tTool, tToolStack, SCAN_BUDGET_PER_TICK);
 				if (!acquireNextTarget(tTool, tToolStack)) {
-				mProgress = 0;
-				mProgressMax = 0;
-				return;
+					mProgress = 0;
+					mProgressMax = 0;
+					return;
 				}
 			}
 			mProgress = 0;
