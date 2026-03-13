@@ -47,6 +47,7 @@ import gregapi.render.BlockTextureDefault;
 import gregapi.render.BlockTextureMulti;
 import gregapi.render.IIconContainer;
 import gregapi.render.ITexture;
+import gregapi.block.IBlockExtendedMetaData;
 import gregapi.block.multitileentity.MultiTileEntityContainer;
 import gregapi.tileentity.base.TileEntityBase09FacingSingle;
 import gregapi.tileentity.energy.ITileEntityEnergyElectricityAcceptor;
@@ -294,11 +295,11 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		if (!worldObj.blockExists(aX, aY, aZ)) return F;
 		Block tBlock = worldObj.getBlock(aX, aY, aZ);
 		int tMeta = worldObj.getBlockMetadata(aX, aY, aZ);
-		return isMineableTarget(tBlock, tMeta, aTool, aToolStack);
+		return isMineableTarget(aX, aY, aZ, tBlock, tMeta, aTool, aToolStack);
 	}
 
-	private boolean isMineableTarget(Block aBlock, int aMeta, MultiItemTool aTool, ItemStack aToolStack) {
-		if (!isOreBlock(aBlock, aMeta)) return F;
+	private boolean isMineableTarget(int aX, int aY, int aZ, Block aBlock, int aMeta, MultiItemTool aTool, ItemStack aToolStack) {
+		if (!isOreBlockAt(aX, aY, aZ, aBlock, aMeta)) return F;
 		return aTool.getDigSpeed(aToolStack, aBlock, aMeta) > 0;
 	}
 
@@ -384,7 +385,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 
 				Block tBlock = tChunk.getBlock(tLocalX, tWorldY, tLocalZ);
 				int tMeta = tChunk.getBlockMetadata(tLocalX, tWorldY, tLocalZ);
-				if (isMineableTarget(tBlock, tMeta, aTool, aToolStack)) enqueueCandidate(tWorldX, tWorldY, tWorldZ);
+				if (isMineableTarget(tWorldX, tWorldY, tWorldZ, tBlock, tMeta, aTool, aToolStack)) enqueueCandidate(tWorldX, tWorldY, tWorldZ);
 			}
 
 			if (mScanIndex >= SECTION_SCAN_SIZE) {
@@ -453,6 +454,13 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		boolean tResult = WD.ore(aBlock, (short)aMeta);
 		ORE_BLOCK_CACHE.put(tKey, Boolean.valueOf(tResult));
 		return tResult;
+	}
+
+	private boolean isOreBlockAt(int aX, int aY, int aZ, Block aBlock, int aMeta) {
+		if (isOreBlock(aBlock, aMeta)) return T;
+		// PrefixBlock 类矿石会把真实矿物 ID 存在扩展元数据里，使用坐标级栈判定兜底可识别“未知矿石”。
+		if (!(aBlock instanceof IBlockExtendedMetaData)) return F;
+		return OM.prefixcontains(WD.stack(worldObj, aX, aY, aZ), TD.Prefix.ORE);
 	}
 
 	private boolean enqueueCandidate(int aX, int aY, int aZ) {
@@ -528,7 +536,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		}
 		if (!canFitAll(tDrops)) return;
 
-		worldObj.func_147480_a(mTargetX, mTargetY, mTargetZ, F);
+		worldObj.setBlock(mTargetX, mTargetY, mTargetZ, Blocks.cobblestone, 0, 3);
 		loseTarget();
 		for (ItemStack tDrop : tDrops) addToOutput(tDrop);
 
