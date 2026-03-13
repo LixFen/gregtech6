@@ -98,6 +98,14 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	private static final int ENERGY_BUFFER_BONUS_MAX = 2000;
 	private static final int HU_PROGRESS_MULTIPLIER = 2;
 	private static final int KU_PROGRESS_MULTIPLIER = 4;
+	/**
+	 * Cache from (blockId<<16|meta) → isOre result.
+	 * Safe to share across instances: Forge block registrations are immutable within a JVM session,
+	 * so entries never become stale during normal play. The cache is size-bounded: once it exceeds
+	 * ORE_CACHE_MAX_SIZE entries (which requires an extraordinary number of distinct block types in
+	 * the scan area), all entries are evicted and rebuilt on demand to prevent unbounded growth.
+	 */
+	private static final int ORE_CACHE_MAX_SIZE = 4096;
 	private static final Map<Long, Boolean> ORE_BLOCK_CACHE = new HashMap<>();
 	/** Set of target coordinates currently claimed by a single miner in each world to prevent multiple miners from competing for the same ore block. */
 	private static final Map<World, Set<Long>> CLAIMED_TARGETS = new WeakHashMap<>();
@@ -441,6 +449,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		long tKey = (((long)Block.getIdFromBlock(aBlock)) << 16) | (aMeta & 65535L);
 		Boolean tCached = ORE_BLOCK_CACHE.get(tKey);
 		if (tCached != null) return tCached.booleanValue();
+		if (ORE_BLOCK_CACHE.size() >= ORE_CACHE_MAX_SIZE) ORE_BLOCK_CACHE.clear();
 		boolean tResult = WD.ore(aBlock, (short)aMeta);
 		ORE_BLOCK_CACHE.put(tKey, Boolean.valueOf(tResult));
 		return tResult;
