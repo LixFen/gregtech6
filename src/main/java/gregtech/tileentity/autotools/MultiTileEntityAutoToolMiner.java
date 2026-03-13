@@ -99,7 +99,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	private static final int HU_PROGRESS_MULTIPLIER = 2;
 	private static final int KU_PROGRESS_MULTIPLIER = 4;
 	private static final Map<Long, Boolean> ORE_BLOCK_CACHE = new HashMap<>();
-	/** 每个世界中当前被某台矿机独占的目标坐标集合，防止多台矿机争抢同一矿石 */
+	/** Set of target coordinates currently claimed by a single miner in each world to prevent multiple miners from competing for the same ore block. */
 	private static final Map<World, Set<Long>> CLAIMED_TARGETS = new WeakHashMap<>();
 
 	public boolean mStopped = F;
