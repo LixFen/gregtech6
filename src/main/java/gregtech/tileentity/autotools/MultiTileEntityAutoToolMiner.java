@@ -860,7 +860,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 			long tMax = Math.max(1L, mProgressMax);
 			int tPercent = (int)UT.Code.bind(0, 100, (int)((mProgress * 100L) / tMax));
 			fontRendererObj.drawString("Progress: " + (mProgressMax <= 0 ? "-" : tPercent + "%"), 8, 57, 4210752);
-			fontRendererObj.drawString("Energy: " + mEnergy + " EU", 8, 67, 4210752);
+			fontRendererObj.drawString("Energy: " + mEnergy + " *GU", 8, 67, 4210752);
 		}
 	}
 
