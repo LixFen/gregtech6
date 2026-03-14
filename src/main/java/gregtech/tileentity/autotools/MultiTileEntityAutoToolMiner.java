@@ -166,7 +166,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		UT.NBT.setNumber(aNBT, NBT_ENERGY, mEnergy);
 		UT.NBT.setNumber(aNBT, NBT_PROGRESS, mProgress);
 		UT.NBT.setNumber(aNBT, NBT_PROGRESS + ".max", mProgressMax);
-		UT.NBT.setBoolean(aNBT, NBT_MINE_POOR_INTERNAL, mMinePoorOres);
+		aNBT.setBoolean(NBT_MINE_POOR_INTERNAL, mMinePoorOres); // must always write; UT.NBT.setBoolean removes the tag on false
 		UT.NBT.setBoolean(aNBT, NBT_TARGET_ACTIVE, mHasTarget);
 		aNBT.setInteger(NBT_TARGET_X, mTargetX);
 		aNBT.setInteger(NBT_TARGET_Y, mTargetY);
@@ -828,6 +828,12 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 
 	@Override public boolean isEnergyType(TagData aEnergyType, byte aSide, boolean aEmitting) {return !aEmitting && acceptsEnergyType(aEnergyType);}
 	@Override public boolean isEnergyAcceptingFrom(TagData aEnergyType, byte aSide, boolean aTheoretical) {return (aTheoretical || !mStopped) && acceptsEnergyOnSide(aEnergyType, aSide) && super.isEnergyAcceptingFrom(aEnergyType, aSide, aTheoretical);}
+	@Override public long getEnergySizeInputMin(TagData aEnergyType, byte aSide) {
+		// HU and KU sources produce small natural packet sizes; accept any packet >= 1.
+		// EU respects the per-tier mInputMin configured via NBT_INPUT_MIN.
+		if (aEnergyType == TD.Energy.HU || aEnergyType == TD.Energy.KU) return 1;
+		return super.getEnergySizeInputMin(aEnergyType, aSide);
+	}
 	@Override public long getEnergySizeInputRecommended(TagData aEnergyType, byte aSide) {return mInput;}
 	@Override public Collection<TagData> getEnergyTypes(byte aSide) {return new ArrayListNoNulls<>(F, TD.Energy.EU, TD.Energy.HU, TD.Energy.KU);}
 
