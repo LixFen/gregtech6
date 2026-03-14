@@ -37,6 +37,7 @@ import gregapi.gui.ContainerCommon;
 import gregapi.gui.Slot_Normal;
 import gregapi.data.LH;
 import gregapi.data.LH.Chat;
+import gregapi.data.OP;
 import gregapi.data.TD;
 import gregapi.item.multiitem.MultiItemTool;
 import gregapi.item.multiitem.tools.IToolStats;
@@ -47,7 +48,7 @@ import gregapi.render.BlockTextureDefault;
 import gregapi.render.BlockTextureMulti;
 import gregapi.render.IIconContainer;
 import gregapi.render.ITexture;
-import gregapi.block.IBlockExtendedMetaData;
+import gregapi.block.prefixblock.PrefixBlock;
 import gregapi.block.multitileentity.MultiTileEntityContainer;
 import gregapi.tileentity.base.TileEntityBase09FacingSingle;
 import gregapi.tileentity.energy.ITileEntityEnergyElectricityAcceptor;
@@ -87,6 +88,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	private static final String NBT_RANGE_INTERNAL = "gt.miner.range";
 	private static final String NBT_CHANCE_INTERNAL = "gt.miner.chance";
 	private static final String NBT_SPEED_INTERNAL = "gt.miner.speedmult";
+	private static final String NBT_MINE_POOR_INTERNAL = "gt.miner.minepoor";
 	private static final String NBT_TARGET_ACTIVE = "gt.miner.target.active";
 	private static final String NBT_SCAN_CHUNK_X = "gt.miner.scan.chunkx";
 	private static final String NBT_SCAN_CHUNK_Z = "gt.miner.scan.chunkz";
@@ -116,6 +118,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	public long mProgress = 0, mProgressMax = 0;
 	public int mRange = 4, mBaseChance = 5000;
 	public int mSpeedMultiplier = 16;
+	public boolean mMinePoorOres = T;
 	public boolean mHasTarget = F;
 	public int mTargetX = 0, mTargetY = 0, mTargetZ = 0;
 	public int mScanChunkX = 0, mScanChunkZ = 0, mScanSection = 0, mScanIndex = 0;
@@ -138,6 +141,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		if (aNBT.hasKey(NBT_RANGE_INTERNAL)) mRange = (int)UT.Code.bind(1, MAX_RANGE, aNBT.getInteger(NBT_RANGE_INTERNAL));
 		if (aNBT.hasKey(NBT_CHANCE_INTERNAL)) mBaseChance = (int)UT.Code.bind(0, 10000, aNBT.getInteger(NBT_CHANCE_INTERNAL));
 		if (aNBT.hasKey(NBT_SPEED_INTERNAL)) mSpeedMultiplier = (int)UT.Code.bind(1, 64, aNBT.getInteger(NBT_SPEED_INTERNAL));
+		if (aNBT.hasKey(NBT_MINE_POOR_INTERNAL)) mMinePoorOres = aNBT.getBoolean(NBT_MINE_POOR_INTERNAL);
 		mHasTarget = aNBT.getBoolean(NBT_TARGET_ACTIVE);
 		if (aNBT.hasKey(NBT_TARGET_X) && aNBT.hasKey(NBT_TARGET_Y) && aNBT.hasKey(NBT_TARGET_Z)) {
 			mTargetX = aNBT.getInteger(NBT_TARGET_X);
@@ -160,6 +164,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		UT.NBT.setNumber(aNBT, NBT_ENERGY, mEnergy);
 		UT.NBT.setNumber(aNBT, NBT_PROGRESS, mProgress);
 		UT.NBT.setNumber(aNBT, NBT_PROGRESS + ".max", mProgressMax);
+		UT.NBT.setBoolean(aNBT, NBT_MINE_POOR_INTERNAL, mMinePoorOres);
 		UT.NBT.setBoolean(aNBT, NBT_TARGET_ACTIVE, mHasTarget);
 		aNBT.setInteger(NBT_TARGET_X, mTargetX);
 		aNBT.setInteger(NBT_TARGET_Y, mTargetY);
@@ -181,7 +186,9 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		aList.add(Chat.CYAN + "EU/HU/KU Each Active: " + Chat.WHITE + "Chance +18% Base");
 		aList.add(Chat.CYAN + "HU Input (Bottom): " + Chat.WHITE + "Progress Energy x" + HU_PROGRESS_MULTIPLIER);
 		aList.add(Chat.CYAN + "KU Input (Back): " + Chat.WHITE + "Progress Energy x" + KU_PROGRESS_MULTIPLIER);
+		aList.add(Chat.CYAN + "Poor Ore Mining: " + Chat.WHITE + (mMinePoorOres ? "Enabled" : "Disabled"));
 		aList.add(Chat.CYAN + "Tool Durability Is Consumed On Success Only");
+		aList.add(Chat.DGRAY + LH.get(LH.TOOL_TO_TOGGLE_SCREWDRIVER));
 		LH.addEnergyToolTips(this, aList, TD.Energy.EU, null, LH.get(LH.FACE_ANY), null);
 		LH.addEnergyToolTips(this, aList, TD.Energy.HU, null, LH.get(LH.FACE_BOTTOM), null);
 		LH.addEnergyToolTips(this, aList, TD.Energy.KU, null, LH.get(LH.FACE_BACK), null);
@@ -300,6 +307,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 
 	private boolean isMineableTarget(int aX, int aY, int aZ, Block aBlock, int aMeta, MultiItemTool aTool, ItemStack aToolStack) {
 		if (!isOreBlockAt(aX, aY, aZ, aBlock, aMeta)) return F;
+		if (!mMinePoorOres && isPoorOreBlock(aBlock)) return F;
 		return aTool.getDigSpeed(aToolStack, aBlock, aMeta) > 0;
 	}
 
@@ -458,9 +466,14 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 
 	private boolean isOreBlockAt(int aX, int aY, int aZ, Block aBlock, int aMeta) {
 		if (isOreBlock(aBlock, aMeta)) return T;
-		// PrefixBlock 类矿石会把真实矿物 ID 存在扩展元数据里，使用坐标级栈判定兜底可识别“未知矿石”。
-		if (!(aBlock instanceof IBlockExtendedMetaData)) return F;
-		return OM.prefixcontains(WD.stack(worldObj, aX, aY, aZ), TD.Prefix.ORE);
+		// GT6 的“未知矿石”是 PrefixBlock 矿石在客户端遮挡状态下的表现；服务端可直接按 Prefix 判定。
+		return aBlock instanceof PrefixBlock && ((PrefixBlock)aBlock).mPrefix != null && ((PrefixBlock)aBlock).mPrefix.contains(TD.Prefix.ORE);
+	}
+
+	private boolean isPoorOreBlock(Block aBlock) {
+		if (!(aBlock instanceof PrefixBlock)) return F;
+		PrefixBlock tPrefixBlock = (PrefixBlock)aBlock;
+		return tPrefixBlock.mPrefix == OP.oreSmall || tPrefixBlock.mPrefix == OP.orePoor;
 	}
 
 	private boolean enqueueCandidate(int aX, int aY, int aZ) {
@@ -521,7 +534,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		}
 		Block tBlock = worldObj.getBlock(mTargetX, mTargetY, mTargetZ);
 		int tMeta = worldObj.getBlockMetadata(mTargetX, mTargetY, mTargetZ);
-		if (!isOreBlock(tBlock, tMeta)) {
+		if (!isOreBlockAt(mTargetX, mTargetY, mTargetZ, tBlock, tMeta)) {
 			loseTarget();
 			return;
 		}
@@ -698,6 +711,15 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 	@Override
 	public long onToolClick2(String aTool, long aRemainingDurability, long aQuality, Entity aPlayer, List<String> aChatReturn, IInventory aPlayerInventory, boolean aSneaking, ItemStack aStack, byte aSide, float aHitX, float aHitY, float aHitZ) {
 		if (isClientSide()) return super.onToolClick2(aTool, aRemainingDurability, aQuality, aPlayer, aChatReturn, aPlayerInventory, aSneaking, aStack, aSide, aHitX, aHitY, aHitZ);
+		if (aTool.equals(TOOL_screwdriver)) {
+			mMinePoorOres = !mMinePoorOres;
+			if (aChatReturn != null) aChatReturn.add("Poor Ore Mining: " + (mMinePoorOres ? "Enabled" : "Disabled"));
+			return 2000;
+		}
+		if (aTool.equals(TOOL_magnifyingglass)) {
+			if (aChatReturn != null) aChatReturn.add("Poor Ore Mining: " + (mMinePoorOres ? "Enabled" : "Disabled"));
+			return 1;
+		}
 		if (aTool.equals(TOOL_wrench) || aTool.equals(TOOL_monkeywrench)) {
 			byte tTargetSide = UT.Code.getSideWrenching(aSide, aHitX, aHitY, aHitZ);
 			if (SIDES_HORIZONTAL[tTargetSide]) {
