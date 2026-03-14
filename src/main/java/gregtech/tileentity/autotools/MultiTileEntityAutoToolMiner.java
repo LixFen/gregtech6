@@ -155,6 +155,8 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		if (aNBT.hasKey(NBT_SCAN_INDEX)) mScanIndex = aNBT.getInteger(NBT_SCAN_INDEX);
 		mScanStarted = aNBT.getBoolean(NBT_SCAN_STARTED);
 		deserializeCandidates(aNBT.getIntArray(NBT_CANDIDATES));
+		// Rebuild world-scoped claim set after load so adjacent miners keep target exclusivity.
+		if (mHasTarget && worldObj != null && !worldObj.isRemote) claimTarget();
 	}
 
 	@Override
@@ -650,6 +652,7 @@ public class MultiTileEntityAutoToolMiner extends TileEntityBase09FacingSingle i
 		if (aAmount <= 0) return 0;
 		long tSize = Math.abs(aSize);
 		if (tSize <= 0) return 0;
+		if (tSize < getEnergySizeInputMin(aEnergyType, aSide)) return 0;
 		if (tSize > getEnergySizeInputMax(aEnergyType, aSide)) {
 			if (aDoInject) overcharge(tSize, aEnergyType);
 			return aAmount;
