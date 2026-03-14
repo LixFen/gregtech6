@@ -714,7 +714,7 @@ public class MultiItemTool extends MultiItem implements IItemGTHandTool, IItemGT
 	@Override public int getItemEnchantability() {return 0;}
 	@Override public boolean isBookEnchantable(ItemStack aStack, ItemStack aBook) {return F;}
 	@Override public boolean getIsRepairable(ItemStack aStack, ItemStack aMaterial) {return F;}
-	@Override public boolean showDurabilityBar(ItemStack aStack) {return getToolDamage(aStack) > 0;}
+	@Override public boolean showDurabilityBar(ItemStack aStack) {return getToolDamage(aStack) > 0 || getEnergyStats(aStack) != null;}
 	@Override public double getDurabilityForDisplay(ItemStack aStack) {
 		long tMaxDamage = getToolMaxDamage(aStack);
 		if (tMaxDamage <= 0) return 0;
